@@ -6,7 +6,7 @@ A mobile chat application built with React Native and Expo. This project allows 
 
 *(Here, you can add a screenshot or, even better, a GIF of your app in action that you recorded)*
 
-![A demo showing the user flow from the Start screen to the Chat screen.](./assets/ChatApp%20Task%205.1%20Recording.gif)
+![A demo showing the user flow from the Start screen to the Chat screen.](./assets/ChatApp%20Task%205.1.gif)
 
 ## Key Features
 
