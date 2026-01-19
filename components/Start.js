@@ -15,7 +15,8 @@ const Start = ({ navigation }) => {
     const [name, setName] = useState('');
     const [background, setBackground] = useState('');
 
-    const colors = ['#090C08',
+    const colors = [
+        '#090C08',
         '#474056',
         '#8A95A5',
         '#B9C6AE'

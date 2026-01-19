@@ -1,3 +1,6 @@
+// New: Add this import at the very top (Require for Gesture Handler)
+import 'react-native-gesture-handler';
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';
