@@ -58,20 +58,27 @@ const Chat = ({ route, navigation }) => {
     );
   }
 
+  // Fix: We need to wrap GiftedChat inside KeyboardingAvoidingView.
+  // This ensures the layout calculates correctly and the button isn't covered.
+
   return (
     // Set the background color based on the prop passed
     <View style={[styles.container, { backgroundColor: background }]}>
-      <GiftedChat
-        messages={messages}
-        renderBubble={renderBubble}
-        onSend={messages => onSend(messages)}
-        user={{
-          _id: 1 // This matches the ID of the person "typing"
-        }}
+      <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 90} // Adjusts for the header bar
+      >
+      <GiftedChat 
+      messages={messages}
+      renderBubble={renderBubble}
+      onSend={onSend}
+      user={{
+        _id: 1 // This matches the ID of the person "typing"
+      }}
       />
-      {/* 5. Android & iOS Keyboard Fix */}
-      { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null }
-      { Platform.OS === 'ios' ? <KeyboardAvoidingView behavior="padding" /> : null }
+      </KeyboardAvoidingView>
+    
     </View>
   );
 }
