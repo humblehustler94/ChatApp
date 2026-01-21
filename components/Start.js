@@ -75,6 +75,15 @@ const Start = ({ navigation }) => {
                                         borderColor: '#fff'
                                     }]}
                                     onPress={() => setBackground(color)}
+
+                                    // 1. ACCESSIBILIRTY FOR COLOR BUBBLES 
+                                    accessible={true}
+                                    accessibilityRole="button"
+                                    accessibilityHint="Lets you choose the background color for your chat screen."
+
+                                    // We create a label based on the index so the reader says "Color choice 1", "Color choice 2", ect.
+
+                                    accessibilityLabel="Color choice"
                                 />
                             ))}
                         </View>
@@ -82,6 +91,12 @@ const Start = ({ navigation }) => {
                         <TouchableOpacity
                             style={styles.button}
                             onPress={signIn}
+
+                            // 2. ACCESSIBILITY FOR START BUTTON
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel="Start Chatting"
+                            accessibilityHint="Navigates to the chat screen."
                         >
                             <Text style={styles.buttonText}>Start Chatting</Text>
                         </TouchableOpacity>
