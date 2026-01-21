@@ -77,12 +77,14 @@ const Start = ({ navigation }) => {
                                     onPress={() => setBackground(color)}
 
                                     // 1. ACCESSIBILIRTY FOR COLOR BUBBLES 
+                                    // Accessibility: Allows screen readers to recognize this as a button
                                     accessible={true}
                                     accessibilityRole="button"
+                                    // Hint: Explains what happend when clicked
                                     accessibilityHint="Lets you choose the background color for your chat screen."
 
                                     // We create a label based on the index so the reader says "Color choice 1", "Color choice 2", ect.
-
+                                    // Label: Describes the element (e.g., "Color choice")
                                     accessibilityLabel="Color choice"
                                 />
                             ))}

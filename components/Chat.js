@@ -3,18 +3,18 @@ import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 
 const Chat = ({ route, navigation }) => {
-  // Extract params from navigation
+  // Extract the "name" and "background" params passed from the Start screen.
   const { name, background } = route.params;
 
-  // 1. Create the messages state
+  // Initialize the messages state with an empty array
   const [messages, setMessages] = useState([]);
 
-  // Set the title to the user's name
+  // useEffect to set the navigation title to the user's name once on mount.
   useEffect(() => {
     navigation.setOptions({ title: name });
   }, []);
 
-  // 2. Load initial messages (User message + System message)
+  // useEffect to laod the initial messages when the component mounts.
   useEffect(() => {
     setMessages([
       {
@@ -29,19 +29,20 @@ const Chat = ({ route, navigation }) => {
       },
       {
         _id: 2,
-        text: 'This is a system message',
+        text: 'You have entered the chat', // Updated: Matches the requirement text
         createdAt: new Date(),
-        system: true,
+        system: true, // This marks the message as a system notification
       },
     ]);
   }, []);
 
-  // 3. onSend function to handle new messages
+  // Function called when a user sends a message.
   const onSend = (newMessages = []) => {
+    // Append the new message to the previous messages state.
     setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
   }
 
-  // 4. Custom Bubble Styling (Optional/Advanced step from text)
+  // Function to customize the chat bubble style.
   const renderBubble = (props) => {
     return (
       <Bubble
@@ -86,6 +87,7 @@ const Chat = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1, // Important: Allows the view to expand to 100% of screen
+    // Ensures the view expands to fill the screen.
   }
 });
 
