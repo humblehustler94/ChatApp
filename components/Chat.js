@@ -2,19 +2,29 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 
-const Chat = ({ route, navigation }) => {
+// 1. We modify the function signature to accept 'db' from props
+const Chat = ({ db, route, navigation }) => {
   // Extract the "name" and "background" params passed from the Start screen.
   const { name, background } = route.params;
 
   // Initialize the messages state with an empty array
   const [messages, setMessages] = useState([]);
 
+  // 2. This is the verification step to ensure 'db' is available
+  useEffect(() => {
+    if (db) {
+      console.log("Chat.js: Database connection prop received!");
+    } else {
+      console.log("Chat.js: No database connection found.");
+    }
+  }, [db]);
+
   // useEffect to set the navigation title to the user's name once on mount.
   useEffect(() => {
     navigation.setOptions({ title: name });
   }, []);
 
-  // useEffect to laod the initial messages when the component mounts.
+  // useEffect to load the initial messages when the component mounts.
   useEffect(() => {
     setMessages([
       {
@@ -29,9 +39,9 @@ const Chat = ({ route, navigation }) => {
       },
       {
         _id: 2,
-        text: 'You have entered the chat', // Updated: Matches the requirement text
+        text: 'You have entered the chat',
         createdAt: new Date(),
-        system: true, // This marks the message as a system notification
+        system: true,
       },
     ]);
   }, []);
@@ -59,35 +69,30 @@ const Chat = ({ route, navigation }) => {
     );
   }
 
-  // Fix: We need to wrap GiftedChat inside KeyboardingAvoidingView.
-  // This ensures the layout calculates correctly and the button isn't covered.
-
   return (
     // Set the background color based on the prop passed
     <View style={[styles.container, { backgroundColor: background }]}>
       <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 90} // Adjusts for the header bar
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 90}
       >
-      <GiftedChat 
-      messages={messages}
-      renderBubble={renderBubble}
-      onSend={onSend}
-      user={{
-        _id: 1 // This matches the ID of the person "typing"
-      }}
-      />
+        <GiftedChat
+          messages={messages}
+          renderBubble={renderBubble}
+          onSend={onSend}
+          user={{
+            _id: 1 // This matches the ID of the person "typing"
+          }}
+        />
       </KeyboardAvoidingView>
-    
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Important: Allows the view to expand to 100% of screen
-    // Ensures the view expands to fill the screen.
+    flex: 1,
   }
 });
 
