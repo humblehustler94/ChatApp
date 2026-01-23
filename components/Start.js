@@ -8,10 +8,20 @@ import {
     TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
-    Image // 1. Added Image to imports
+    Image,
+    Alert // 1. Added Alert to imports
 } from 'react-native';
 
-const Start = ({ navigation }) => {
+// -----------------------------------------
+// --- 2. Import Firebase Auth Functions ---
+import { getAuth, signInAnonymously } from "firebase/auth";
+// -----------------------------------------
+// --- 1. Accept 'auth' as a prop ---
+const Start = ({ navigation, auth }) => {
+    // --- 3. Initialize the Firebase Auth Handler ---
+    // 2. DELETED: const auth = getAuth(); (We use the prop instead)
+
+
     const [name, setName] = useState('');
     const [background, setBackground] = useState('');
 
@@ -22,12 +32,33 @@ const Start = ({ navigation }) => {
         '#B9C6AE'
     ];
 
-    const signIn = () => {
-        navigation.navigate('Chat', {
-            name: name,
-            background: background
-        });
+    // =====================================
+    // 4. Replace the old signIn function with the new Anonymous Auth Logic 
+
+    //const signIn = () => {
+      //  navigation.navigate('Chat', {
+        //    name: name,
+          //  background: background
+        //});
+    //}
+    const signInUser = () => {
+        // --- 3. Pass the 'auth' prop we received to the sign-in function ---
+        signInAnonymously(auth)
+        .then(result => {
+            // Navigate to Chat, passing user ID, name, and background
+            navigation.navigate("Chat", {
+                userID: result.user.uid, // We now pass the ID from Firebase
+                name: name,
+                background : background
+            });
+            Alert.alert("Signed in Successfully!");
+        })
+        .catch((error) => {
+            Alert.alert("Unable to sign in, try again later.");
+        })
     }
+    // =====================================
+
 
     return (
         <View style={styles.container}>
@@ -90,9 +121,11 @@ const Start = ({ navigation }) => {
                             ))}
                         </View>
 
+
+                        {/* 5. Update onPress to call the new signInUser function */}
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={signIn}
+                            onPress={signInUser}
 
                             // 2. ACCESSIBILITY FOR START BUTTON
                             accessible={true}

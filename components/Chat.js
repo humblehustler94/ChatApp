@@ -5,7 +5,9 @@ import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 // 1. We modify the function signature to accept 'db' from props
 const Chat = ({ db, route, navigation }) => {
   // Extract the "name" and "background" params passed from the Start screen.
-  const { name, background } = route.params;
+  // ===========================================
+  // 1. UPDATE: Destructive 'userID' from route.params
+  const { name, background, userID } = route.params;
 
   // Initialize the messages state with an empty array
   const [messages, setMessages] = useState([]);
@@ -81,8 +83,10 @@ const Chat = ({ db, route, navigation }) => {
           messages={messages}
           renderBubble={renderBubble}
           onSend={onSend}
+          // 2. UPDATE: Use the UserID and name passed from Start.js
           user={{
-            _id: 1 // This matches the ID of the person "typing"
+            _id: userID, // This matches the ID of the person "typing"
+            name: name
           }}
         />
       </KeyboardAvoidingView>
