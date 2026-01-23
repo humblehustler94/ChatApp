@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+// --- NEW CODE START ---
+import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+// --- NEW CODE END ---
 
 // 1. We modify the function signature to accept 'db' from props
 const Chat = ({ db, route, navigation }) => {
@@ -28,30 +31,39 @@ const Chat = ({ db, route, navigation }) => {
 
   // useEffect to load the initial messages when the component mounts.
   useEffect(() => {
-    setMessages([
-      {
-        _id: 1,
-        text: "Hello developer",
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: "React Native",
-          avatar: "https://placeimg.com/140/140/any",
-        },
-      },
-      {
-        _id: 2,
-        text: 'You have entered the chat',
-        createdAt: new Date(),
-        system: true,
-      },
-    ]);
+    // --- NEW FIREBASE LISTENER LOGIC ---
+    
+    // 1. Create the query (get messages ordered by time)
+    const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+
+    // 2. Listen for real-time updates
+    const unsubMessages = onSnapshot(q, (docs) => {
+      let newMessages = [];
+      docs.forEach(doc => {
+        newMessages.push({
+          id: doc.id,
+          ...doc.data(),
+          // Conversion: Firestore Timestamp -> JS Date
+          createdAt: new Date(doc.data().createdAt.toMillis())
+        })
+      })
+      setMessages(newMessages);
+    });
+
+    // 3. Clean up listener when component unmounts
+    return () => {
+      if (unsubMessages) unsubMessages();
+    }
   }, []);
 
   // Function called when a user sends a message.
-  const onSend = (newMessages = []) => {
-    // Append the new message to the previous messages state.
-    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
+  const onSend = (newMessages) => {
+    // --- NEW FIREBASE SAVE LOGIC ---
+    // Save the message to Firestore
+    addDoc(collection(db, "messages"), newMessages[0]);
+    // Note: We don't need to manually call setMessages here because
+    // the onSnapshot listener in useEffect will see the new database item 
+    // and update the list automatically!
   }
 
   // Function to customize the chat bubble style.
