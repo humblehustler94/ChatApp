@@ -1,69 +1,80 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
-// --- NEW CODE START ---
+import { StyleSheet, View, Platform, KeyboardAvoidingView, Text } from 'react-native';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
-// --- NEW CODE END ---
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// 1. We modify the function signature to accept 'db' from props
-const Chat = ({ db, route, navigation }) => {
-  // Extract the "name" and "background" params passed from the Start screen.
-  // ===========================================
-  // 1. UPDATE: Destructive 'userID' from route.params
+// --- FIX: Declare unsubMessages OUTSIDE the component entirely ---
+// This ensures the reference is kept even when the component re-renders 
+// due to connection changes, allowing proper cleanup of old listeners.
+let unsubMessages;
+
+const Chat = ({ db, route, navigation, isConnected }) => {
   const { name, background, userID } = route.params;
-
-  // Initialize the messages state with an empty array
   const [messages, setMessages] = useState([]);
 
-  // 2. This is the verification step to ensure 'db' is available
-  useEffect(() => {
-    if (db) {
-      console.log("Chat.js: Database connection prop received!");
-    } else {
-      console.log("Chat.js: No database connection found.");
+  // --- NEW CACHING FUNCTIONS START ---
+
+  // Save messages to local storage
+  const cacheMessages = async (messagesToCache) => {
+    try {
+      await AsyncStorage.setItem('messages', JSON.stringify(messagesToCache));
+    } catch (error) {
+      console.log(error.message);
     }
-  }, [db]);
+  }
+
+  // Load messages from local storage
+  const loadCachedMessages = async () => {
+    const cachedMessages = await AsyncStorage.getItem("messages") || "[]";
+    setMessages(JSON.parse(cachedMessages));
+  }
+  // --- NEW CACHING FUNCTIONS END ---
 
   // useEffect to set the navigation title to the user's name once on mount.
   useEffect(() => {
     navigation.setOptions({ title: name });
   }, []);
 
-  // useEffect to load the initial messages when the component mounts.
+  // 3. UPDATED useEffect for logic switching (Online vs Offline)
   useEffect(() => {
-    // --- NEW FIREBASE LISTENER LOGIC ---
-    
-    // 1. Create the query (get messages ordered by time)
-    const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
 
-    // 2. Listen for real-time updates
-    const unsubMessages = onSnapshot(q, (docs) => {
-      let newMessages = [];
-      docs.forEach(doc => {
-        newMessages.push({
-          id: doc.id,
-          ...doc.data(),
-          // Conversion: Firestore Timestamp -> JS Date
-          createdAt: new Date(doc.data().createdAt.toMillis())
-        })
-      })
-      setMessages(newMessages);
-    });
+    if (isConnected === true) {
+      // If online, setup the firestore listener
 
-    // 3. Clean up listener when component unmounts
+      // Clean up old listener if it exists to prevent memory leaks
+      if (unsubMessages) unsubMessages();
+      unsubMessages = null;
+
+      const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+      unsubMessages = onSnapshot(q, (docs) => {
+        let newMessages = [];
+        docs.forEach(doc => {
+          newMessages.push({
+            _id: doc.id, // --- FIX: Use _id for GiftedChat compatibility ---
+            ...doc.data(),
+            // Conversion: Firestore Timestamp -> JS Date
+            createdAt: new Date(doc.data().createdAt.toMillis())
+          })
+        });
+
+        // --- CACHE THE MESSAGES HERE ---
+        cacheMessages(newMessages);
+        setMessages(newMessages);
+      });
+    } else {
+      // If offline, load from local storage
+      loadCachedMessages();
+    }
+
+    // Clean up listener when component unmounts
     return () => {
       if (unsubMessages) unsubMessages();
     }
-  }, []);
+  }, [isConnected]); // 4. Dependency ensures logic re-runs on signal change
 
-  // Function called when a user sends a message.
   const onSend = (newMessages) => {
-    // --- NEW FIREBASE SAVE LOGIC ---
-    // Save the message to Firestore
     addDoc(collection(db, "messages"), newMessages[0]);
-    // Note: We don't need to manually call setMessages here because
-    // the onSnapshot listener in useEffect will see the new database item 
-    // and update the list automatically!
   }
 
   // Function to customize the chat bubble style.
@@ -72,20 +83,28 @@ const Chat = ({ db, route, navigation }) => {
       <Bubble
         {...props}
         wrapperStyle={{
-          right: {
-            backgroundColor: "#000"
-          },
-          left: {
-            backgroundColor: "#FFF"
-          }
+          right: { backgroundColor: "#000" },
+          left: { backgroundColor: "#FFF" }
         }}
       />
     );
   }
 
+  // --- UPDATED: Logic to keep the input toolbar visible even when offline ---
+  const renderInputToolbar = (props) => {
+    // By removing the "if(isConnected)" check, the toolbar remains on screen
+    return <InputToolbar {...props} />;
+  }
+
   return (
-    // Set the background color based on the prop passed
     <View style={[styles.container, { backgroundColor: background }]}>
+      {/* --- NEW: RED CONNECTION BANNER --- */}
+      {isConnected === false ? (
+        <View style={styles.connectionBanner}>
+          <Text style={styles.connectionText}>Connection lost!</Text>
+        </View>
+      ): null}
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
@@ -94,11 +113,21 @@ const Chat = ({ db, route, navigation }) => {
         <GiftedChat
           messages={messages}
           renderBubble={renderBubble}
+          renderInputToolbar={renderInputToolbar}
           onSend={onSend}
-          // 2. UPDATE: Use the UserID and name passed from Start.js
+          // --- FIX: Hides the floating action button (hamburger icon) ---
+          //renderActions={null} 
+          // --- AVATAR SETTINGS ---
+          showAvatarForEveryMessage={true} 
+          showUserAvatar={true}           
+          renderUsernameOnMessage={true} 
           user={{
-            _id: userID, // This matches the ID of the person "typing"
-            name: name
+            _id: userID + name,
+            name: name,
+            // Uses your custom initials-based logic or placeholder
+            //avatar: "https://placeimg.com/140/140/any"
+            // Use this reliable service - it creates an avatar with the user's initials!
+            avatar: `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`
           }}
         />
       </KeyboardAvoidingView>
@@ -107,8 +136,24 @@ const Chat = ({ db, route, navigation }) => {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { 
+    flex: 1 
+  },
+  // --- BANNER STYLES ---
+  connectionBanner: {
+    backgroundColor: '#C0392B', // A deep red color
+    width: '100%',
+    height: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute', // This keeps it at the very top
+    top: 0,
+    zIndex: 1, // Ensure it says on top of the chat messages
+  },
+  connectionText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
   }
 });
 
