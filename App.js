@@ -1,5 +1,5 @@
 // App.js
-import { use, useEffect } from 'react'; // 1. Import useEffect
+import { useState, useEffect } from 'react'; // 1. Import useEffect
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';

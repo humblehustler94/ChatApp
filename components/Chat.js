@@ -3,6 +3,9 @@ import { StyleSheet, View, Platform, KeyboardAvoidingView, Text } from 'react-na
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+// --- NEW: Import ImagePicker ---
+import * as ImagePicker from 'expo-image-picker';
+// ===============================================
 
 // --- FIX: Declare unsubMessages OUTSIDE the component entirely ---
 // This ensures the reference is kept even when the component re-renders 
@@ -12,6 +15,36 @@ let unsubMessages;
 const Chat = ({ db, route, navigation, isConnected }) => {
   const { name, background, userID } = route.params;
   const [messages, setMessages] = useState([]);
+  // ========================================
+  // --- NEW: IMAGE SELECTION LOGIC START ---
+  // Logic to pick an image from the library
+  const pickImage = async () => {
+    let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissions?.granted) {
+      let result = await ImagePicker.launchImageLibraryAsync();
+      if (!result.canceled) {
+        // Instead of setImage, we "send" the image message
+        const imageUri = result.assets[0].uri;
+        onSend([{ image: imageUri }]);
+      }
+
+    }
+  }
+
+  // Logic to take a new photo with the camera
+  const takePhoto = async () => {
+    let permissions = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissions?.granted) {
+      let result = await ImagePicker.launchCameraAsync();
+      if (!result.canceled) {
+        const imageUri = result.assets[0].uri;
+        onSend([{ image: imageUri }]);
+      }
+    }
+  }
+
+  // --- NEW: IMAGE SELECTION LOGIC END ---
+  // ========================================
 
   // --- NEW CACHING FUNCTIONS START ---
 
@@ -73,8 +106,20 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     }
   }, [isConnected]); // 4. Dependency ensures logic re-runs on signal change
 
+  // UPDATE: Standardizing the message object before sending to Firestore
   const onSend = (newMessages) => {
-    addDoc(collection(db, "messages"), newMessages[0]);
+    const messageToSend = newMessages[0];
+
+    // Ensure all necessary fields are present for GiftedChat/Firestore compatibility
+    addDoc(collection(db, "messages"), {
+      ...messageToSend, 
+      createdAt: new Date(),
+      user: {
+        _id: userID + name,
+        name: name,
+        avatar: `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`
+      }
+    });
   }
 
   // Function to customize the chat bubble style.
@@ -95,6 +140,15 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     // By removing the "if(isConnected)" check, the toolbar remains on screen
     return <InputToolbar {...props} />;
   }
+// =================================================
+  // NEW: Placeholder for the "+" Action button
+  // (In the next sub-topic, you will create a custom component for this)
+  const renderActions = (props) => {
+    // This is where you'll eventually place the custom "+" button component
+    // For now, it stays as null until the next part of your course
+    return null;
+  }
+  // ===============================================
 
   return (
     <View style={[styles.container, { backgroundColor: background }]}>
@@ -103,7 +157,7 @@ const Chat = ({ db, route, navigation, isConnected }) => {
         <View style={styles.connectionBanner}>
           <Text style={styles.connectionText}>Connection lost!</Text>
         </View>
-      ): null}
+      ) : null}
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -115,12 +169,16 @@ const Chat = ({ db, route, navigation, isConnected }) => {
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
           onSend={onSend}
+          // UPDATE: Now points to the renderActions function
+          renderActions={renderActions}
+
           // --- FIX: Hides the floating action button (hamburger icon) ---
           //renderActions={null} 
+
           // --- AVATAR SETTINGS ---
-          showAvatarForEveryMessage={true} 
-          showUserAvatar={true}           
-          renderUsernameOnMessage={true} 
+          showAvatarForEveryMessage={true}
+          showUserAvatar={true}
+          renderUsernameOnMessage={true}
           user={{
             _id: userID + name,
             name: name,
@@ -136,8 +194,8 @@ const Chat = ({ db, route, navigation, isConnected }) => {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1 
+  container: {
+    flex: 1
   },
   // --- BANNER STYLES ---
   connectionBanner: {
