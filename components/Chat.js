@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Platform, KeyboardAvoidingView, Text } from 'react-native';
+import { StyleSheet, View, Platform, KeyboardAvoidingView, Text, Alert } from 'react-native'; // Added Alert to imports
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // --- NEW: Import ImagePicker ---
 import * as ImagePicker from 'expo-image-picker';
+// --- NEW: Import Location ---
+import * as Location from 'expo-location';
 // ===============================================
 
 // --- FIX: Declare unsubMessages OUTSIDE the component entirely ---
@@ -16,7 +18,8 @@ const Chat = ({ db, route, navigation, isConnected }) => {
   const { name, background, userID } = route.params;
   const [messages, setMessages] = useState([]);
   // ========================================
-  // --- NEW: IMAGE SELECTION LOGIC START ---
+  // --- NEW: COMMUNICATION LOGIC START ---
+
   // Logic to pick an image from the library
   const pickImage = async () => {
     let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -27,7 +30,6 @@ const Chat = ({ db, route, navigation, isConnected }) => {
         const imageUri = result.assets[0].uri;
         onSend([{ image: imageUri }]);
       }
-
     }
   }
 
@@ -43,7 +45,25 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     }
   }
 
-  // --- NEW: IMAGE SELECTION LOGIC END ---
+  // Logic to get the user's geolocation
+  const getLocation = async () => {
+    let permissions = await Location.requestForegroundPermissionsAsync();
+    if (permissions?.granted) {
+      const location = await Location.getCurrentPositionAsync({});
+      if (location) {
+        onSend([{
+          location: {
+            longitude: location.coords.longitude,
+            latitude: location.coords.latitude,
+          },
+        }]);
+      }
+    } else {
+      Alert.alert("Permissions to read location aren't granted");
+    }
+  }
+
+  // --- NEW: COMMUNICATION LOGIC END ---
   // ========================================
 
   // --- NEW CACHING FUNCTIONS START ---
@@ -183,8 +203,6 @@ const Chat = ({ db, route, navigation, isConnected }) => {
             _id: userID + name,
             name: name,
             // Uses your custom initials-based logic or placeholder
-            //avatar: "https://placeimg.com/140/140/any"
-            // Use this reliable service - it creates an avatar with the user's initials!
             avatar: `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`
           }}
         />
