@@ -4,6 +4,9 @@ import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// --- NEW: Import MapView ---
+import MapView from 'react-native-maps';
+
 // --- NEW: Import CustomActions component ---
 import CustomActions from './CustomActions';
 
@@ -118,6 +121,30 @@ const Chat = ({ db, route, navigation, isConnected }) => {
   const renderCustomActions = (props) => {
     return <CustomActions userID={userID} onSend={onSend} {...props} />;
   };
+
+  // NEW: Function to render a MapView if the message contains location data
+  const renderCustomView = (props) => {
+    const { currentMessage } = props;
+    if (currentMessage.location) {
+      return (
+          <MapView
+            style={{
+              width: 150,
+              height: 100,
+              borderRadius: 13,
+              margin: 3
+            }}
+            region={{
+              latitude: currentMessage.location.latitude,
+              longitude: currentMessage.location.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          />
+      );
+    }
+    return null;
+  }
   // ===============================================
 
   return (
@@ -141,6 +168,8 @@ const Chat = ({ db, route, navigation, isConnected }) => {
           onSend={onSend}
           // UPDATE: Now points to the renderCustomActions function
           renderActions={renderCustomActions}
+          // --- NEW: Point to renderCustomView for Map rendering ---
+          renderCustomView={renderCustomView}
 
           // --- AVATAR SETTINGS ---
           showAvatarForEveryMessage={true}

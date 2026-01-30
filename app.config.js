@@ -1,4 +1,6 @@
-{
+import 'dotenv/config';
+
+export default {
   "expo": {
     "name": "ChatApp",
     "slug": "ChatApp",
@@ -21,7 +23,13 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.iflores94.ChatApp"
+      "package": "com.iflores94.ChatApp",
+      "config": {
+        "googleMaps": {
+          // ADDED process.env. HERE:
+          "apiKey": process.env.GOOGLE_MAPS_API_KEY
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
