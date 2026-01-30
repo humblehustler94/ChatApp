@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Platform, KeyboardAvoidingView, Text, Alert } from 'react-native'; // Added Alert to imports
+import { StyleSheet, View, Platform, KeyboardAvoidingView, Text } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// --- NEW: Import ImagePicker ---
-import * as ImagePicker from 'expo-image-picker';
-// --- NEW: Import Location ---
-import * as Location from 'expo-location';
-// ===============================================
+
+// --- NEW: Import CustomActions component ---
+import CustomActions from './CustomActions';
 
 // --- FIX: Declare unsubMessages OUTSIDE the component entirely ---
 // This ensures the reference is kept even when the component re-renders 
@@ -17,54 +15,6 @@ let unsubMessages;
 const Chat = ({ db, route, navigation, isConnected }) => {
   const { name, background, userID } = route.params;
   const [messages, setMessages] = useState([]);
-  // ========================================
-  // --- NEW: COMMUNICATION LOGIC START ---
-
-  // Logic to pick an image from the library
-  const pickImage = async () => {
-    let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissions?.granted) {
-      let result = await ImagePicker.launchImageLibraryAsync();
-      if (!result.canceled) {
-        // Instead of setImage, we "send" the image message
-        const imageUri = result.assets[0].uri;
-        onSend([{ image: imageUri }]);
-      }
-    }
-  }
-
-  // Logic to take a new photo with the camera
-  const takePhoto = async () => {
-    let permissions = await ImagePicker.requestCameraPermissionsAsync();
-    if (permissions?.granted) {
-      let result = await ImagePicker.launchCameraAsync();
-      if (!result.canceled) {
-        const imageUri = result.assets[0].uri;
-        onSend([{ image: imageUri }]);
-      }
-    }
-  }
-
-  // Logic to get the user's geolocation
-  const getLocation = async () => {
-    let permissions = await Location.requestForegroundPermissionsAsync();
-    if (permissions?.granted) {
-      const location = await Location.getCurrentPositionAsync({});
-      if (location) {
-        onSend([{
-          location: {
-            longitude: location.coords.longitude,
-            latitude: location.coords.latitude,
-          },
-        }]);
-      }
-    } else {
-      Alert.alert("Permissions to read location aren't granted");
-    }
-  }
-
-  // --- NEW: COMMUNICATION LOGIC END ---
-  // ========================================
 
   // --- NEW CACHING FUNCTIONS START ---
 
@@ -128,7 +78,9 @@ const Chat = ({ db, route, navigation, isConnected }) => {
 
   // UPDATE: Standardizing the message object before sending to Firestore
   const onSend = (newMessages) => {
-    const messageToSend = newMessages[0];
+    // When called from CustomActions, newMessages might be an object rather than an array
+    // GiftedChat usually sends an array, but we check to handle both
+    const messageToSend = Array.isArray(newMessages) ? newMessages[0] : newMessages;
 
     // Ensure all necessary fields are present for GiftedChat/Firestore compatibility
     addDoc(collection(db, "messages"), {
@@ -160,14 +112,12 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     // By removing the "if(isConnected)" check, the toolbar remains on screen
     return <InputToolbar {...props} />;
   }
-// =================================================
-  // NEW: Placeholder for the "+" Action button
-  // (In the next sub-topic, you will create a custom component for this)
-  const renderActions = (props) => {
-    // This is where you'll eventually place the custom "+" button component
-    // For now, it stays as null until the next part of your course
-    return null;
-  }
+
+  // =================================================
+  // NEW: Function to render the CustomActions button
+  const renderCustomActions = (props) => {
+    return <CustomActions userID={userID} onSend={onSend} {...props} />;
+  };
   // ===============================================
 
   return (
@@ -189,11 +139,8 @@ const Chat = ({ db, route, navigation, isConnected }) => {
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
           onSend={onSend}
-          // UPDATE: Now points to the renderActions function
-          renderActions={renderActions}
-
-          // --- FIX: Hides the floating action button (hamburger icon) ---
-          //renderActions={null} 
+          // UPDATE: Now points to the renderCustomActions function
+          renderActions={renderCustomActions}
 
           // --- AVATAR SETTINGS ---
           showAvatarForEveryMessage={true}
@@ -202,7 +149,6 @@ const Chat = ({ db, route, navigation, isConnected }) => {
           user={{
             _id: userID + name,
             name: name,
-            // Uses your custom initials-based logic or placeholder
             avatar: `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`
           }}
         />
