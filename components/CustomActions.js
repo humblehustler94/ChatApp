@@ -48,17 +48,31 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID }) => {
     }
   }
 
+
   const getLocation = async () => {
+    console.log("getLocation triggered"); // Trace 1
     let permissions = await Location.requestForegroundPermissionsAsync();
+
     if (permissions?.granted) {
-      const location = await Location.getCurrentPositionAsync({});
-      if (location) {
-        onSend({
-          location: {
-            longitude: location.coords.longitude,
-            latitude: location.coords.latitude,
-          },
-        });
+      console.log("Permissions granted, fetching position..."); // Trace 2
+
+      // We add a try/catch to see if an error is happening silently
+      try { // CHANGED: getCurrentPositionAsync to getLastKnownPositionAsync
+        const location = await Location.getLastKnownPositionAsync({});
+        console.log("Location received:", location); // Trace 3
+
+        if (location) {
+          onSend({
+            location: {
+              longitude: location.coords.longitude,
+              latitude: location.coords.latitude,
+            },
+          });
+          console.log("onSend called for location"); // Trace 4
+        }
+      } catch (error) {
+        console.error("Error getting location:", error);
+        Alert.alert("Error occurred while fetching location");
       }
     } else {
       Alert.alert("Permissions to read location aren't granted");
