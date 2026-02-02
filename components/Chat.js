@@ -4,12 +4,19 @@ import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// --- NEW: Import MapView ---
+import MapView from 'react-native-maps';
+
+// --- NEW: Import CustomActions component ---
+import CustomActions from './CustomActions';
+
 // --- FIX: Declare unsubMessages OUTSIDE the component entirely ---
 // This ensures the reference is kept even when the component re-renders 
 // due to connection changes, allowing proper cleanup of old listeners.
 let unsubMessages;
 
-const Chat = ({ db, route, navigation, isConnected }) => {
+// UPDATE: Added 'storage' to the props destructed here
+const Chat = ({ db, storage, route, navigation, isConnected }) => {
   const { name, background, userID } = route.params;
   const [messages, setMessages] = useState([]);
 
@@ -73,8 +80,22 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     }
   }, [isConnected]); // 4. Dependency ensures logic re-runs on signal change
 
+  // UPDATE: Standardizing the message object before sending to Firestore
   const onSend = (newMessages) => {
-    addDoc(collection(db, "messages"), newMessages[0]);
+    // When called from CustomActions, newMessages might be an object rather than an array
+    // GiftedChat usually sends an array, but we check to handle both
+    const messageToSend = Array.isArray(newMessages) ? newMessages[0] : newMessages;
+
+    // Ensure all necessary fields are present for GiftedChat/Firestore compatibility
+    addDoc(collection(db, "messages"), {
+      ...messageToSend, 
+      createdAt: new Date(),
+      user: {
+        _id: userID + name,
+        name: name,
+        avatar: `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`
+      }
+    });
   }
 
   // Function to customize the chat bubble style.
@@ -96,6 +117,38 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     return <InputToolbar {...props} />;
   }
 
+  // =================================================
+  // NEW: Function to render the CustomActions button
+  // UPDATE: Now passing the storage prop to CustomActions
+  const renderCustomActions = (props) => {
+    return <CustomActions storage={storage} userID={userID} onSend={onSend} {...props} />;
+  };
+
+  // NEW: Function to render a MapView if the message contains location data
+  const renderCustomView = (props) => {
+    const { currentMessage } = props;
+    if (currentMessage.location) {
+      return (
+          <MapView
+            style={{
+              width: 150,
+              height: 100,
+              borderRadius: 13,
+              margin: 3
+            }}
+            region={{
+              latitude: currentMessage.location.latitude,
+              longitude: currentMessage.location.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          />
+      );
+    }
+    return null;
+  }
+  // ===============================================
+
   return (
     <View style={[styles.container, { backgroundColor: background }]}>
       {/* --- NEW: RED CONNECTION BANNER --- */}
@@ -103,7 +156,7 @@ const Chat = ({ db, route, navigation, isConnected }) => {
         <View style={styles.connectionBanner}>
           <Text style={styles.connectionText}>Connection lost!</Text>
         </View>
-      ): null}
+      ) : null}
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -115,18 +168,14 @@ const Chat = ({ db, route, navigation, isConnected }) => {
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
           onSend={onSend}
-          // --- FIX: Hides the floating action button (hamburger icon) ---
-          //renderActions={null} 
-          // --- AVATAR SETTINGS ---
-          showAvatarForEveryMessage={true} 
-          showUserAvatar={true}           
-          renderUsernameOnMessage={true} 
+          renderActions={renderCustomActions} // UPDATE: Now points to the renderCustomActions function
+          renderCustomView={renderCustomView} // --- NEW: Point to renderCustomView for Map rendering ---
+          showAvatarForEveryMessage={true} // --- AVATAR SETTINGS ---
+          showUserAvatar={true}
+          renderUsernameOnMessage={true}
           user={{
             _id: userID + name,
             name: name,
-            // Uses your custom initials-based logic or placeholder
-            //avatar: "https://placeimg.com/140/140/any"
-            // Use this reliable service - it creates an avatar with the user's initials!
             avatar: `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`
           }}
         />
@@ -136,8 +185,8 @@ const Chat = ({ db, route, navigation, isConnected }) => {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1 
+  container: {
+    flex: 1
   },
   // --- BANNER STYLES ---
   connectionBanner: {

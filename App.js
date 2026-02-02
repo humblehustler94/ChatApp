@@ -1,5 +1,5 @@
 // App.js
-import { use, useEffect } from 'react'; // 1. Import useEffect
+import { useState, useEffect } from 'react'; // 1. Import useEffect
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,8 +10,8 @@ import { LogBox, Alert } from 'react-native'; // 2. Add Alert to imports
 import { useNetInfo } from '@react-native-community/netinfo';
 import { disableNetwork, enableNetwork } from 'firebase/firestore';
 // ===================================================
-
-import { db, auth } from './firebaseConfig';
+// UPDATED: Added 'storage' to the imports from firebaseConfig
+import { db, auth, storage } from './firebaseConfig';
 import Start from './components/Start';
 import Chat from './components/Chat';
 
@@ -21,10 +21,10 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   // =================================================
-  // 4. Initialize the connection status hook
+  // Initialize the connection status hook
   const connectionStatus = useNetInfo();
 
-  // 5. Logic to enable/disable Firestore network based on connectivity
+  // Logic to enable/disable Firestore network based on connectivity
   useEffect(() => {
     if (connectionStatus.isConnected === false) {
       Alert.alert("Connection lost!");
@@ -54,6 +54,7 @@ const App = () => {
               <Chat
                 isConnected={connectionStatus.isConnected}
                 db={db}
+                storage={storage} // UPDATED: Pass the storage prop here
                 {...props}
               />
             )}
