@@ -93,7 +93,7 @@ For standard developement:
 If you install a new library that changes the native "guts" of the app (like adding camera permissions or updating the Map library), you must rebuild the native folders:
 
 - npx expo run:android
-# OR
+OR
 - npx expo run:ios
 
 ---
