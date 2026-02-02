@@ -15,7 +15,8 @@ import CustomActions from './CustomActions';
 // due to connection changes, allowing proper cleanup of old listeners.
 let unsubMessages;
 
-const Chat = ({ db, route, navigation, isConnected }) => {
+// UPDATE: Added 'storage' to the props destructed here
+const Chat = ({ db, storage, route, navigation, isConnected }) => {
   const { name, background, userID } = route.params;
   const [messages, setMessages] = useState([]);
 
@@ -118,8 +119,9 @@ const Chat = ({ db, route, navigation, isConnected }) => {
 
   // =================================================
   // NEW: Function to render the CustomActions button
+  // UPDATE: Now passing the storage prop to CustomActions
   const renderCustomActions = (props) => {
-    return <CustomActions userID={userID} onSend={onSend} {...props} />;
+    return <CustomActions storage={storage} userID={userID} onSend={onSend} {...props} />;
   };
 
   // NEW: Function to render a MapView if the message contains location data
@@ -166,13 +168,9 @@ const Chat = ({ db, route, navigation, isConnected }) => {
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
           onSend={onSend}
-          // UPDATE: Now points to the renderCustomActions function
-          renderActions={renderCustomActions}
-          // --- NEW: Point to renderCustomView for Map rendering ---
-          renderCustomView={renderCustomView}
-
-          // --- AVATAR SETTINGS ---
-          showAvatarForEveryMessage={true}
+          renderActions={renderCustomActions} // UPDATE: Now points to the renderCustomActions function
+          renderCustomView={renderCustomView} // --- NEW: Point to renderCustomView for Map rendering ---
+          showAvatarForEveryMessage={true} // --- AVATAR SETTINGS ---
           showUserAvatar={true}
           renderUsernameOnMessage={true}
           user={{
