@@ -74,7 +74,7 @@ APP_ID=your_app_id <br/>
 
 ### 4. Firebase Setup
 
-1. Create a project in the [Firebase Console] (https://console.firebase.google.com).
+1. Create a project in the [Firebase Console] (https://console.firebase.google.com/).
 2. Enable **Firestore Database** in Test Mode.
 3. Enable **Firebase Storage** and set rules to allow read, write: if true; for development.
 4. Enable **Anonymous Authentication** (or your preferred method).
