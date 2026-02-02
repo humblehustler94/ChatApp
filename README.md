@@ -63,18 +63,18 @@ To run this project locally, follow these steps:
 - npm install
 
 ### 3. Configuration (Environment Variables)
-
 This goes into the .env file
-API_KEY=your_api_key
-AUTH_DOMAIN=your_project_id.firebaseapp.com
-PROJECT_ID=your_project_id
-STORAGE_BUCKET=your_project_id.firebasestorage.app
-MESSAGING_SENDER_ID=your_messaging_id
-APP_ID=your_app_id
+
+API_KEY=your_api_key <br/>
+AUTH_DOMAIN=your_project_id.firebaseapp.com <br/>
+PROJECT_ID=your_project_id <br/>
+STORAGE_BUCKET=your_project_id.firebasestorage.app <br/>
+MESSAGING_SENDER_ID=your_messaging_id <br/>
+APP_ID=your_app_id <br/>
 
 ### 4. Firebase Setup
 
-1. Create a project in the Firebase Console.
+1. Create a project in the [Firebase Console] (https://console.firebase.google.com).
 2. Enable **Firestore Database** in Test Mode.
 3. Enable **Firebase Storage** and set rules to allow read, write: if true; for development.
 4. Enable **Anonymous Authentication** (or your preferred method).
@@ -89,7 +89,6 @@ For standard developement:
 If you install a new library that changes the native "guts" of the app (like adding camera permissions or updating the Map library), you must rebuild the native folders:
 
 - npx expo run:android
-OR
 - npx expo run:ios
 
 ---
