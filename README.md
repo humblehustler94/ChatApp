@@ -12,10 +12,6 @@ A professional mobile chat application build with React Native and Expo. This ap
 
 ![Screenshot of Chat screen in ChatApp](assets/9%20-%20ChatApp%20Chat%20View.png)
 
-![A demo showing offline features](assets/5.4%20-%20Final%20Task.gif)
-
-![A demo showing the final result of the app.](assets/5.5%20-%20Final%20Task.gif)
-
 ![Screenshot of Chat in ChatApp](assets/20%20-%20ChatApp%20Chat%20screen%20view.png)
 
 ---
