@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![ChatApp Logo](https://raw.githubusercontent.com/humblehustler94/ChatApp/master/assets/icon.png) <!-- Assuming icon.png is the project logo -->
+![ChatApp Logo](assets/background-image.png) <!-- Assuming icon.png is the project logo -->
 
 [![GitHub stars](https://img.shields.io/github/stars/humblehustler94/ChatApp?style=for-the-badge)](https://github.com/humblehustler94/ChatApp/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/humblehustler94/ChatApp?style=for-the-badge)](https://github.com/humblehustler94/ChatApp/network)
@@ -33,8 +33,10 @@ ChatApp is a modern mobile messaging application designed to facilitate seamless
 ## 🖥️ Screenshots
 
 <!-- TODO: Add actual screenshots of the app on iOS and Android platforms to showcase the UI -->
-![ChatApp iOS Screenshot](path-to-ios-screenshot.png)
-![ChatApp Android Screenshot](path-to-android-screenshot.png)
+![ChatApp Android Start Screen](assets/8%20-%20ChatApp%20Start%20View.png)
+![ChatApp Android Chat Screen](assets/20%20-%20ChatApp%20Chat%20screen%20view.png)
+![Screen Recording of ChatApp](assets/5.5%20-%20Final%20Task.gif)
+
 
 ## 🛠️ Tech Stack
 
