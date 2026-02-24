@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![ChatApp Logo](assets/background-image.png) <!-- Assuming icon.png is the project logo -->
+![ChatApp Logo](assets/ChatApp-logo.png) <!-- Assuming icon.png is the project logo -->
 
 [![GitHub stars](https://img.shields.io/github/stars/humblehustler94/ChatApp?style=for-the-badge)](https://github.com/humblehustler94/ChatApp/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/humblehustler94/ChatApp?style=for-the-badge)](https://github.com/humblehustler94/ChatApp/network)
